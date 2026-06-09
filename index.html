@@ -344,9 +344,18 @@
 
 <script>
 // ═══════════════════════════════════════════════════════
-//  CONFIG — your operational key configuration
+//  CONFIG & SECURE STORAGE KEY CHECK
 // ═══════════════════════════════════════════════════════
-const CLAUDE_API_KEY  = "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";
+let CLAUDE_API_KEY = localStorage.getItem("anthropic_key");
+
+// Secure runtime fallback if key isn't stored locally yet
+if (!CLAUDE_API_KEY) {
+  CLAUDE_API_KEY = prompt("Please enter a valid, active Anthropic API Key (sk-ant-...):");
+  if (CLAUDE_API_KEY) {
+    localStorage.setItem("anthropic_key", CLAUDE_API_KEY.trim());
+  }
+}
+
 const FEATURE_LAYER   = "https://services7.arcgis.com/acUiOt0qxC8BlCCx/ArcGIS/rest/services/Pleasanton_Collisions_Dashboard_WFL1/FeatureServer/0";
 
 // ── Sample queries shown as chips ──────────────────────
@@ -435,6 +444,12 @@ async function runQuery() {
   const question = document.getElementById("nlq-input").value.trim();
   if (!question) return;
 
+  // Final confirmation to catch setup gaps
+  if (!CLAUDE_API_KEY) {
+     showError("Missing API key parameter. Reload the frame and enter a fresh Anthropic API key.");
+     return;
+  }
+
   // Reset UI
   hideError();
   document.getElementById("sql-wrap").style.display = "none";
@@ -443,7 +458,7 @@ async function runQuery() {
   document.getElementById("run-btn").disabled = true;
 
   try {
-    // Step 1 — ask Claude to generate a WHERE clause via a CORS Proxy
+    // Step 1 — Ask Claude to translate your layout structure using CORS-Proxy pipeline
     showStatus("Translating your question to SQL…");
 
     const proxyUrl = "https://corsproxy.io/?";
