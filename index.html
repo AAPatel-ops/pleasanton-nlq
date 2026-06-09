@@ -454,7 +454,7 @@ async function runQuery() {
     showStatus("Translating your question to SQL…");
 
     // DIRECT INTERACTION: Pointing straight to Anthropic. Bypasses buggy CORS proxies entirely.
-    const directUrl = "https://api.anthropic.com/v1/messages";
+    const directUrl = "https://cors-anywhere.herokuapp.com/https://api.anthropic.com/v1/messages";
     
     const response = await fetch(directUrl, {
       method: "POST",
