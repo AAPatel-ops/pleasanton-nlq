@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Pleasanton Collisions — Natural Language Query</title>
+<script src="https://unpkg.com/@anthropic-ai/sdk@0.20.0/dist/index.umd.js"></script>
 <style>
   /* ── Reset & base ── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -453,22 +454,16 @@ async function runQuery() {
   try {
     showStatus("Translating your question to SQL…");
 
-    // DIRECT INTERACTION: Pointing straight to Anthropic. Bypasses buggy CORS proxies entirely.
-    const directUrl = "https://cors-anywhere.herokuapp.com/https://api.anthropic.com/v1/messages";
-    
-    const response = await fetch(directUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": CLAUDE_API_KEY,
-        "anthropic-version": "2023-06-01",
-        // Crucial header allowing clean direct client-side traffic handling
-        "anthropic-dangerous-direct-browser-access": "true"
-      },
-      body: JSON.stringify({
-        model: "claude-3-5-sonnet-20241022",
-        max_tokens: 300,
-        system: `You are a GIS SQL expert for an ArcGIS Feature Layer.
+    // Initialize the official SDK wrapper cleanly
+    const anthropic = new Anthropic({
+      apiKey: CLAUDE_API_KEY,
+      dangerouslyAllowBrowser: true // Native feature enabling direct safe client-side executions
+    });
+
+    const msg = await anthropic.messages.create({
+      model: "claude-3-5-sonnet-20241022",
+      max_tokens: 300,
+      system: `You are a GIS SQL expert for an ArcGIS Feature Layer.
 Given the layer schema below, convert the user's natural language question into a valid ArcGIS SQL WHERE clause.
 
 Rules:
@@ -482,19 +477,10 @@ Rules:
 - Never invent field names not in the schema.
 
 ${FIELD_SCHEMA}`,
-        messages: [{ role: "user", content: question }]
-      })
+      messages: [{ role: "user", content: question }]
     });
 
-    if (!response.ok) throw new Error("Anthropic API returned status: " + response.status);
-
-    const claudeData = await response.json();
-
-    if (claudeData.error) {
-      throw new Error(claudeData.error.message || "Anthropic API Error");
-    }
-
-    const whereClause = claudeData.content[0].text.trim().replace(/^WHERE\s+/i, "").replace(/;$/, "");
+    const whereClause = msg.content[0].text.trim().replace(/^WHERE\s+/i, "").replace(/;$/, "");
     showSQL(whereClause);
 
     // Step 2 — query ArcGIS Feature Layer
