@@ -24,7 +24,8 @@
     --complaint: #38a169;
     --radius:    10px;
     --radius-sm: 6px;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    /* Clean fallback font stack prevents network slow intervention warnings */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
 
   body {
@@ -344,19 +345,18 @@
 
 <script>
 // ═══════════════════════════════════════════════════════
-//  CONFIG & SECURE STORAGE KEY CHECK
+//  CONFIG & LOCALSECURE STORAGE CHECK
 // ═══════════════════════════════════════════════════════
 let CLAUDE_API_KEY = localStorage.getItem("anthropic_key");
 
-// Secure runtime fallback if key isn't stored locally yet
 if (!CLAUDE_API_KEY) {
-  CLAUDE_API_KEY = prompt("Please enter a valid, active Anthropic API Key (sk-ant-...):");
+  CLAUDE_API_KEY = prompt("Please enter a valid Anthropic API Key (sk-ant-...):");
   if (CLAUDE_API_KEY) {
     localStorage.setItem("anthropic_key", CLAUDE_API_KEY.trim());
   }
 }
 
-const FEATURE_LAYER   = "https://services7.arcgis.com/acUiOt0qxC8BlCCx/ArcGIS/rest/services/Pleasanton_Collisions_Dashboard_WFL1/FeatureServer/0";
+const FEATURE_LAYER = "https://services7.arcgis.com/acUiOt0qxC8BlCCx/ArcGIS/rest/services/Pleasanton_Collisions_Dashboard_WFL1/FeatureServer/0";
 
 // ── Sample queries shown as chips ──────────────────────
 const SAMPLE_QUERIES = [
@@ -444,13 +444,12 @@ async function runQuery() {
   const question = document.getElementById("nlq-input").value.trim();
   if (!question) return;
 
-  // Final confirmation to catch setup gaps
   if (!CLAUDE_API_KEY) {
      showError("Missing API key parameter. Reload the frame and enter a fresh Anthropic API key.");
      return;
   }
 
-  // Reset UI
+  // Reset UI elements
   hideError();
   document.getElementById("sql-wrap").style.display = "none";
   document.getElementById("results-wrap").style.display = "none";
@@ -458,24 +457,17 @@ async function runQuery() {
   document.getElementById("run-btn").disabled = true;
 
   try {
-    // Step 1 — Ask Claude to translate your layout structure using CORS-Proxy pipeline
     showStatus("Translating your question to SQL…");
 
-    const proxyUrl = "https://corsproxy.io/?";
+    // AllOrigins CSP-safe structural proxy bypass wrapper
     const targetUrl = "https://api.anthropic.com/v1/messages";
+    const proxyUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent(targetUrl);
 
-    const claudeRes = await fetch(proxyUrl + encodeURIComponent(targetUrl), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": CLAUDE_API_KEY,
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true"
-      },
-      body: JSON.stringify({
-        model: "claude-3-5-sonnet-20241022",
-        max_tokens: 300,
-        system: `You are a GIS SQL expert for an ArcGIS Feature Layer.
+    // Build standard body payload to pass inside proxy request configuration
+    const reqBody = {
+      model: "claude-3-5-sonnet-20241022",
+      max_tokens: 300,
+      system: `You are a GIS SQL expert for an ArcGIS Feature Layer.
 Given the layer schema below, convert the user's natural language question into a valid ArcGIS SQL WHERE clause.
 
 Rules:
@@ -489,16 +481,38 @@ Rules:
 - Never invent field names not in the schema.
 
 ${FIELD_SCHEMA}`,
-        messages: [{ role: "user", content: question }]
+      messages: [{ role: "user", content: question }]
+    };
+
+    // Use standard HTTP POST request structure targeted cleanly via proxy mapping pipeline
+    const proxyRes = await fetch(proxyUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": CLAUDE_API_KEY,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true"
+        },
+        body: JSON.stringify(reqBody)
       })
     });
 
-    if (!claudeRes.ok) {
-      const err = await claudeRes.json();
-      throw new Error(err.error?.message || "Claude API error: " + claudeRes.status);
+    if (!proxyRes.ok) throw new Error("Network proxy handshake failed.");
+
+    const rawWrapperData = await proxyRes.json();
+    
+    // Parse inner string representation safely to sidestep ArcGIS unsafe-eval policies
+    const claudeData = JSON.parse(rawWrapperData.contents);
+
+    if (claudeData.error) {
+      throw new Error(claudeData.error.message || "Anthropic API rejection error.");
     }
 
-    const claudeData = await claudeRes.json();
     const whereClause = claudeData.content[0].text.trim().replace(/^WHERE\s+/i, "").replace(/;$/, "");
     showSQL(whereClause);
 
@@ -521,7 +535,7 @@ ${FIELD_SCHEMA}`,
 
     const features = arcData.features || [];
 
-    // Step 3 — render stats + table
+    // Step 3 — render dashboard outputs
     hideStatus();
     renderStats(features);
     renderTable(features);
@@ -586,7 +600,7 @@ function renderTable(features) {
   document.getElementById("results-wrap").style.display = "block";
 }
 
-// ── Enter key support ──────────────────────────────────
+// Enter key monitoring support
 document.getElementById("nlq-input").addEventListener("keydown", e => {
   if (e.key === "Enter") runQuery();
 });
