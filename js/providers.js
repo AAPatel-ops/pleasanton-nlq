@@ -204,7 +204,7 @@ Rules:
                     body: JSON.stringify({
 
                         model:
-                            "claude-3-5-sonnet-latest",
+                            "claude-sonnet-4-6",
 
                         temperature: 0,
 
