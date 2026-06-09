@@ -464,7 +464,7 @@ async function runQuery() {
         "anthropic-dangerous-direct-browser-access": "true"
       },
       body: JSON.stringify({
-        model: "claude-3-5-sonnet-20241022",
+        model: "claude-3-5-sonnet-latest",
         max_tokens: 300,
         system: `You are a GIS SQL expert for an ArcGIS Feature Layer.
 Given the layer schema below, convert the user's natural language question into a valid ArcGIS SQL WHERE clause.
