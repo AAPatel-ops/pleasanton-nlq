@@ -351,7 +351,7 @@
 // ═══════════════════════════════════════════════════════
 //  CONFIG — replace YOUR_CLAUDE_API_KEY before deploying
 // ═══════════════════════════════════════════════════════
-const CLAUDE_API_KEY  = "YOUR_CLAUDE_API_KEY";   // ← paste your key here
+const CLAUDE_API_KEY  = "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";   // ← paste your key here
 const FEATURE_LAYER   = "https://services7.arcgis.com/acUiOt0qxC8BlCCx/ArcGIS/rest/services/Pleasanton_Collisions_Dashboard_WFL1/FeatureServer/0";
 
 // ── Sample queries shown as chips ──────────────────────
@@ -441,7 +441,7 @@ async function runQuery() {
   if (!question) return;
 
   // Check API key
-  if (CLAUDE_API_KEY === "YOUR_CLAUDE_API_KEY") {
+  if (CLAUDE_API_KEY === "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") {
     showError("Please open nlq.html in a text editor and replace YOUR_CLAUDE_API_KEY with your real Anthropic API key. See the setup guide for instructions.");
     return;
   }
@@ -461,7 +461,7 @@ async function runQuery() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": CLAUDE_API_KEY,
+        "x-api-key": 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,
         "anthropic-version": "2023-06-01",
         "anthropic-dangerous-direct-browser-access": "true"
       },
