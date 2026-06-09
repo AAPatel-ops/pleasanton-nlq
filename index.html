@@ -30,28 +30,18 @@
 
     <div class="header-left">
 
-        <div class="logo-circle">
-            📍
-        </div>
+        <div class="logo-circle">📍</div>
 
         <div>
-            <h1>
-                Pleasanton Collision Intelligence
-            </h1>
-
-            <p>
-                AI Powered Natural Language Query for ArcGIS
-            </p>
+            <h1>Pleasanton Collision Intelligence</h1>
+            <p>AI Powered Natural Language Query for ArcGIS</p>
         </div>
 
     </div>
 
     <div class="header-right">
 
-        <button id="settingsBtn"
-                class="secondary-btn">
-            ⚙ Settings
-        </button>
+        <button id="settingsBtn" class="secondary-btn">⚙ Settings</button>
 
     </div>
 
@@ -61,69 +51,32 @@
      SETTINGS PANEL
 =================================================== -->
 
-<section id="settingsPanel"
-         class="settings-panel hidden">
+<section id="settingsPanel" class="settings-panel hidden">
 
     <div class="settings-grid">
 
         <div class="setting-group">
-
-            <label>
-                AI Provider
-            </label>
-
+            <label>AI Provider</label>
             <select id="providerSelect">
-
-                <option value="anthropic">
-                    Claude (Anthropic)
-                </option>
-
-                <option value="openai">
-                    OpenAI GPT
-                </option>
-
-                <option value="gemini">
-                    Google Gemini
-                </option>
-
+                <option value="anthropic">Claude (Anthropic)</option>
+                <option value="openai">OpenAI GPT</option>
+                <option value="gemini">Google Gemini</option>
             </select>
-
         </div>
 
         <div class="setting-group">
-
-            <label>
-                API Key
-            </label>
-
-            <input
-                type="password"
-                id="apiKeyInput"
-                placeholder="Enter your API Key">
-
+            <label>API Key</label>
+            <input type="password" id="apiKeyInput" placeholder="Enter your API Key">
         </div>
 
         <div class="setting-group">
-
-            <label>
-                ArcGIS Feature Layer
-            </label>
-
-            <input
-                type="text"
-                id="layerUrl"
-                readonly
+            <label>ArcGIS Feature Layer</label>
+            <input type="text" id="layerUrl" readonly
                 value="https://services7.arcgis.com/acUiOt0qxC8BlCCx/arcgis/rest/services/Pleasanton_Collisions_Dashboard_WFL1/FeatureServer/0">
-
         </div>
 
         <div class="setting-actions">
-
-            <button id="saveSettingsBtn"
-                    class="primary-btn">
-                Save Settings
-            </button>
-
+            <button id="saveSettingsBtn" class="primary-btn">Save Settings</button>
         </div>
 
     </div>
@@ -138,55 +91,34 @@
 
     <section class="query-panel">
 
-        <div class="section-label">
-            NATURAL LANGUAGE QUERY
-        </div>
+        <div class="section-label">NATURAL LANGUAGE QUERY</div>
 
         <div class="query-row">
 
-            <input
-                id="queryInput"
-                type="text"
+            <input id="queryInput" type="text"
                 placeholder="Example: Show fatal pedestrian crashes near schools in 2022">
 
-            <button
-                id="runQueryBtn"
-                class="primary-btn">
-                Search
-            </button>
+            <button id="runQueryBtn" class="primary-btn">Search</button>
 
         </div>
 
-        <div id="sampleQueries"
-             class="sample-queries">
+        <div id="sampleQueries" class="sample-queries">
 
-            <button class="sample-chip">
-                Fatal collisions
-            </button>
-
-            <button class="sample-chip">
-                Pedestrian crashes in 2022
-            </button>
-
-            <button class="sample-chip">
-                Alcohol related crashes
-            </button>
-
-            <button class="sample-chip">
-                Top 10 dangerous roads
-            </button>
-
-            <button class="sample-chip">
-                Top 10 intersections
-            </button>
-
-            <button class="sample-chip">
-                Fatal crashes near schools
-            </button>
-
-            <button class="sample-chip">
-                Bicycle crashes by year
-            </button>
+            <button class="sample-chip">Fatal collisions</button>
+            <button class="sample-chip">Pedestrian crashes in 2022</button>
+            <button class="sample-chip">Alcohol related crashes</button>
+            <button class="sample-chip">Bicycle crashes by year</button>
+            <button class="sample-chip">Crashes by day of week</button>
+            <button class="sample-chip">Crashes by hour of day</button>
+            <button class="sample-chip">Top 10 dangerous roads</button>
+            <button class="sample-chip">Top 10 intersections</button>
+            <button class="sample-chip">Crashes by weather condition</button>
+            <button class="sample-chip">Crashes by collision type</button>
+            <button class="sample-chip">Hit and run crashes</button>
+            <button class="sample-chip">Crashes on the High Injury Network</button>
+            <button class="sample-chip">Fatal crashes near schools</button>
+            <button class="sample-chip">Severity distribution</button>
+            <button class="sample-chip">Crashes in wet conditions</button>
 
         </div>
 
@@ -196,46 +128,30 @@
          STATUS
     ========================================== -->
 
-    <section id="statusContainer"
-             class="status-container hidden">
-
+    <section id="statusContainer" class="status-container hidden">
         <div class="spinner"></div>
-
-        <div id="statusMessage">
-            Processing query...
-        </div>
-
+        <div id="statusMessage">Processing query...</div>
     </section>
 
     <!-- ==========================================
          ERROR
     ========================================== -->
 
-    <section id="errorContainer"
-             class="error-container hidden">
-
+    <section id="errorContainer" class="error-container hidden">
         <span id="errorMessage"></span>
-
     </section>
 
     <!-- ==========================================
          AI INTERPRETATION
     ========================================== -->
 
-    <section id="aiInterpretation"
-             class="card hidden">
+    <section id="aiInterpretation" class="card hidden">
 
         <div class="card-header">
-
-            <h3>
-                AI Interpretation
-            </h3>
-
+            <h3>AI Interpretation</h3>
         </div>
 
-        <div id="interpretationContent"
-             class="card-content">
-        </div>
+        <div id="interpretationContent" class="card-content"></div>
 
     </section>
 
@@ -243,59 +159,26 @@
          STATISTICS
     ========================================== -->
 
-    <section id="statsSection"
-             class="stats-grid hidden">
+    <section id="statsSection" class="stats-grid hidden">
 
         <div class="stat-card">
-
-            <div id="totalCount"
-                 class="stat-value">
-                0
-            </div>
-
-            <div class="stat-label">
-                Total Records
-            </div>
-
+            <div id="totalCount" class="stat-value">0</div>
+            <div class="stat-label">Total Records</div>
         </div>
 
         <div class="stat-card">
-
-            <div id="fatalCount"
-                 class="stat-value fatal">
-                0
-            </div>
-
-            <div class="stat-label">
-                Fatal
-            </div>
-
+            <div id="fatalCount" class="stat-value fatal">0</div>
+            <div class="stat-label">Fatal</div>
         </div>
 
         <div class="stat-card">
-
-            <div id="severeCount"
-                 class="stat-value severe">
-                0
-            </div>
-
-            <div class="stat-label">
-                Severe Injury
-            </div>
-
+            <div id="severeCount" class="stat-value severe">0</div>
+            <div class="stat-label">Severe Injury</div>
         </div>
 
         <div class="stat-card">
-
-            <div id="pedCount"
-                 class="stat-value pedestrian">
-                0
-            </div>
-
-            <div class="stat-label">
-                Pedestrian
-            </div>
-
+            <div id="pedCount" class="stat-value pedestrian">0</div>
+            <div class="stat-label">Pedestrian</div>
         </div>
 
     </section>
@@ -304,21 +187,14 @@
          ANALYTICS CHART
     ========================================== -->
 
-    <section id="chartSection"
-             class="card hidden">
+    <section id="chartSection" class="card hidden">
 
         <div class="card-header">
-
-            <h3>
-                Analytics
-            </h3>
-
+            <h3>Analytics</h3>
         </div>
 
         <div class="chart-wrapper">
-
             <canvas id="analyticsChart"></canvas>
-
         </div>
 
     </section>
@@ -327,30 +203,17 @@
          RESULTS TABLE
     ========================================== -->
 
-    <section id="resultsSection"
-             class="card hidden">
+    <section id="resultsSection" class="card hidden">
 
         <div class="card-header">
 
             <div>
-
-                <h3>
-                    Results
-                </h3>
-
-                <small id="recordCounter">
-                    0 Records
-                </small>
-
+                <h3>Results</h3>
+                <small id="recordCounter">0 Records</small>
             </div>
 
             <div>
-
-                <button id="exportCsvBtn"
-                        class="secondary-btn">
-                    Export CSV
-                </button>
-
+                <button id="exportCsvBtn" class="secondary-btn">Export CSV</button>
             </div>
 
         </div>
@@ -358,29 +221,8 @@
         <div class="table-wrapper">
 
             <table id="resultsTable">
-
-                <thead>
-
-                <tr>
-
-                    <th>Date</th>
-                    <th>Severity</th>
-                    <th>Primary Road</th>
-                    <th>Secondary Road</th>
-                    <th>Collision Type</th>
-                    <th>Killed</th>
-                    <th>Injured</th>
-                    <th>Alcohol</th>
-                    <th>Lighting</th>
-
-                </tr>
-
-                </thead>
-
-                <tbody id="resultsBody">
-
-                </tbody>
-
+                <thead id="resultsHead"></thead>
+                <tbody id="resultsBody"></tbody>
             </table>
 
         </div>
@@ -391,23 +233,14 @@
          QUERY HISTORY
     ========================================== -->
 
-    <section id="historySection"
-             class="card">
+    <section id="historySection" class="card">
 
         <div class="card-header">
-
-            <h3>
-                Query History
-            </h3>
-
+            <h3>Query History</h3>
         </div>
 
         <div id="historyList">
-
-            <div class="empty-history">
-                No queries yet
-            </div>
-
+            <div class="empty-history">No queries yet</div>
         </div>
 
     </section>
@@ -419,15 +252,8 @@
 =================================================== -->
 
 <footer class="footer">
-
-    <span>
-        Pleasanton Collision Intelligence Dashboard
-    </span>
-
-    <span>
-        ArcGIS + Claude + GPT + Gemini
-    </span>
-
+    <span>Pleasanton Collision Intelligence Dashboard</span>
+    <span>ArcGIS + Claude + GPT + Gemini</span>
 </footer>
 
 <!-- ===================================================
