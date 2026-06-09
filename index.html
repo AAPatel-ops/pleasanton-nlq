@@ -1,584 +1,444 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Pleasanton Collisions — Natural Language Query</title>
-<style>
-  /* ── Reset & base ── */
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  :root {
-    --bg:        #0d1b2a;
-    --bg-panel:  #112236;
-    --bg-card:   #16304a;
-    --border:    rgba(255,255,255,0.08);
-    --border-hi: rgba(99,179,237,0.5);
-    --text:      #e8f0f8;
-    --muted:     #7a9ab8;
-    --accent:    #3b9edd;
-    --accent-2:  #2563a8;
-    --fatal:     #e53e3e;
-    --severe:    #4299e1;
-    --visible:   #d69e2e;
-    --complaint: #38a169;
-    --radius:    10px;
-    --radius-sm: 6px;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  }
+<title>Pleasanton Collision Intelligence</title>
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    padding: 0;
-    font-size: 14px;
-  }
+<meta name="description"
+      content="Natural Language Query Dashboard for Pleasanton Collision Data">
 
-  /* ── Header ── */
-  header {
-    background: var(--bg-panel);
-    border-bottom: 1px solid var(--border);
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .logo-dot {
-    width: 28px; height: 28px;
-    background: var(--accent);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-  }
-  .logo-dot svg { width: 16px; height: 16px; fill: white; }
-  header h1 { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.2; }
-  header p  { font-size: 11px; color: var(--muted); }
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-  /* ── Main layout ── */
-  main { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet">
 
-  /* ── Query box ── */
-  .query-wrap {
-    background: var(--bg-panel);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 12px;
-  }
-  .query-label {
-    font-size: 10px; font-weight: 600; letter-spacing: 0.08em;
-    color: var(--muted); text-transform: uppercase; margin-bottom: 8px;
-  }
-  .input-row { display: flex; gap: 8px; }
-  #nlq-input {
-    flex: 1;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    color: var(--text);
-    font-size: 13px;
-    padding: 9px 12px;
-    outline: none;
-    transition: border 0.15s;
-    font-family: inherit;
-  }
-  #nlq-input::placeholder { color: var(--muted); }
-  #nlq-input:focus { border-color: var(--border-hi); }
+<link rel="stylesheet" href="css/styles.css">
 
-  #run-btn {
-    background: var(--accent);
-    border: none;
-    border-radius: var(--radius-sm);
-    color: white;
-    font-size: 13px;
-    font-weight: 600;
-    padding: 9px 18px;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: background 0.15s;
-    font-family: inherit;
-  }
-  #run-btn:hover { background: #2b87cc; }
-  #run-btn:disabled { background: var(--bg-card); color: var(--muted); cursor: not-allowed; }
-
-  /* ── Chips ── */
-  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-  .chip {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    font-size: 11px;
-    color: var(--muted);
-    padding: 4px 10px;
-    cursor: pointer;
-    transition: all 0.12s;
-    font-family: inherit;
-  }
-  .chip:hover { border-color: var(--accent); color: var(--accent); }
-
-  /* ── SQL preview ── */
-  .sql-wrap {
-    background: var(--bg-panel);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 12px;
-    display: none;
-  }
-  .sql-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
-  .sql-text {
-    font-family: 'SF Mono', 'Fira Code', monospace;
-    font-size: 12px;
-    color: #68d391;
-    background: var(--bg-card);
-    border-radius: var(--radius-sm);
-    padding: 8px 10px;
-    word-break: break-all;
-    line-height: 1.5;
-  }
-
-  /* ── Stats row ── */
-  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-  .stat-card {
-    background: var(--bg-panel);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 10px 12px;
-    text-align: center;
-  }
-  .stat-val { font-size: 22px; font-weight: 700; line-height: 1.1; }
-  .stat-lbl { font-size: 10px; color: var(--muted); margin-top: 3px; }
-  .c-fatal    { color: var(--fatal); }
-  .c-severe   { color: var(--severe); }
-  .c-visible  { color: var(--visible); }
-  .c-complaint{ color: var(--complaint); }
-  .c-accent   { color: var(--accent); }
-
-  /* ── Results table ── */
-  .results-wrap {
-    background: var(--bg-panel);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-    display: none;
-  }
-  .results-header {
-    padding: 10px 14px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--border);
-  }
-  .results-header span { font-size: 12px; font-weight: 600; }
-  .results-header small { font-size: 11px; color: var(--muted); }
-  .table-scroll { overflow-x: auto; max-height: 280px; overflow-y: auto; }
-  table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  th {
-    background: var(--bg-card);
-    color: var(--muted);
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    padding: 8px 10px;
-    text-align: left;
-    position: sticky; top: 0;
-    border-bottom: 1px solid var(--border);
-  }
-  td {
-    padding: 7px 10px;
-    border-bottom: 1px solid var(--border);
-    color: var(--text);
-    white-space: nowrap;
-  }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: rgba(255,255,255,0.03); }
-
-  /* Severity badges */
-  .sev {
-    display: inline-block;
-    font-size: 10px; font-weight: 600;
-    padding: 2px 7px; border-radius: 10px;
-  }
-  .sev-1 { background: rgba(229,62,62,0.15); color: var(--fatal); }
-  .sev-2 { background: rgba(66,153,225,0.15); color: var(--severe); }
-  .sev-3 { background: rgba(214,158,46,0.18); color: var(--visible); }
-  .sev-4 { background: rgba(56,161,105,0.15); color: var(--complaint); }
-
-  /* ── Status / loading ── */
-  .status-bar {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 12px 14px;
-    font-size: 12px;
-    color: var(--muted);
-    text-align: center;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-  }
-  .spinner {
-    width: 14px; height: 14px;
-    border: 2px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    flex-shrink: 0;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .error-bar {
-    background: rgba(229,62,62,0.1);
-    border: 1px solid rgba(229,62,62,0.3);
-    border-radius: var(--radius);
-    padding: 10px 14px;
-    font-size: 12px;
-    color: #fc8181;
-    display: none;
-  }
-
-  /* ── Footer ── */
-  footer {
-    padding: 10px 16px;
-    text-align: center;
-    font-size: 10px;
-    color: var(--muted);
-    border-top: 1px solid var(--border);
-  }
-  footer a { color: var(--accent); text-decoration: none; }
-
-  /* ── Scrollbar ── */
-  ::-webkit-scrollbar { width: 5px; height: 5px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 3px; }
-</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
 
-<header>
-  <div class="logo-dot">
-    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-    </svg>
-  </div>
-  <div>
-    <h1>Pleasanton Collisions — AI Query</h1>
-    <p>Ask questions about collision data in plain English</p>
-  </div>
+<!-- ===================================================
+     HEADER
+=================================================== -->
+
+<header class="header">
+
+    <div class="header-left">
+
+        <div class="logo-circle">
+            📍
+        </div>
+
+        <div>
+            <h1>
+                Pleasanton Collision Intelligence
+            </h1>
+
+            <p>
+                AI Powered Natural Language Query for ArcGIS
+            </p>
+        </div>
+
+    </div>
+
+    <div class="header-right">
+
+        <button id="settingsBtn"
+                class="secondary-btn">
+            ⚙ Settings
+        </button>
+
+    </div>
+
 </header>
 
-<main>
+<!-- ===================================================
+     SETTINGS PANEL
+=================================================== -->
 
-  <div class="query-wrap">
-    <div class="query-label">Ask a question</div>
-    <div class="input-row">
-      <input id="nlq-input" type="text"
-        placeholder="e.g. Show all fatal collisions involving pedestrians" />
-      <button id="run-btn" onclick="runQuery()">Search</button>
-    </div>
-    <div class="chips" id="chips"></div>
-  </div>
+<section id="settingsPanel"
+         class="settings-panel hidden">
 
-  <div class="sql-wrap" id="sql-wrap">
-    <div class="sql-label">Generated SQL filter</div>
-    <div class="sql-text" id="sql-text"></div>
-  </div>
+    <div class="settings-grid">
 
-  <div class="status-bar" id="status-bar">
-    <div class="spinner"></div>
-    <span id="status-msg">Thinking…</span>
-  </div>
-  <div class="error-bar" id="error-bar"></div>
+        <div class="setting-group">
 
-  <div class="stats-row" id="stats-row" style="display:none">
-    <div class="stat-card">
-      <div class="stat-val c-accent" id="st-total">—</div>
-      <div class="stat-lbl">Total results</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-val c-fatal" id="st-fatal">—</div>
-      <div class="stat-lbl">Fatal</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-val c-severe" id="st-severe">—</div>
-      <div class="stat-lbl">Severe injury</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-val c-visible" id="st-ped">—</div>
-      <div class="stat-lbl">Pedestrian</div>
-    </div>
-  </div>
+            <label>
+                AI Provider
+            </label>
 
-  <div class="results-wrap" id="results-wrap">
-    <div class="results-header">
-      <span>Results</span>
-      <small id="result-count"></small>
+            <select id="providerSelect">
+
+                <option value="anthropic">
+                    Claude (Anthropic)
+                </option>
+
+                <option value="openai">
+                    OpenAI GPT
+                </option>
+
+                <option value="gemini">
+                    Google Gemini
+                </option>
+
+            </select>
+
+        </div>
+
+        <div class="setting-group">
+
+            <label>
+                API Key
+            </label>
+
+            <input
+                type="password"
+                id="apiKeyInput"
+                placeholder="Enter your API Key">
+
+        </div>
+
+        <div class="setting-group">
+
+            <label>
+                ArcGIS Feature Layer
+            </label>
+
+            <input
+                type="text"
+                id="layerUrl"
+                readonly
+                value="https://services7.arcgis.com/acUiOt0qxC8BlCCx/arcgis/rest/services/Pleasanton_Collisions_Dashboard_WFL1/FeatureServer/0">
+
+        </div>
+
+        <div class="setting-actions">
+
+            <button id="saveSettingsBtn"
+                    class="primary-btn">
+                Save Settings
+            </button>
+
+        </div>
+
     </div>
-    <div class="table-scroll">
-      <table id="result-table">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Severity</th>
-            <th>Location</th>
-            <th>Type</th>
-            <th>Killed</th>
-            <th>Injured</th>
-            <th>Alcohol</th>
-            <th>Lighting</th>
-          </tr>
-        </thead>
-        <tbody id="result-tbody"></tbody>
-      </table>
-    </div>
-  </div>
+
+</section>
+
+<!-- ===================================================
+     QUERY PANEL
+=================================================== -->
+
+<main class="container">
+
+    <section class="query-panel">
+
+        <div class="section-label">
+            NATURAL LANGUAGE QUERY
+        </div>
+
+        <div class="query-row">
+
+            <input
+                id="queryInput"
+                type="text"
+                placeholder="Example: Show fatal pedestrian crashes near schools in 2022">
+
+            <button
+                id="runQueryBtn"
+                class="primary-btn">
+                Search
+            </button>
+
+        </div>
+
+        <div id="sampleQueries"
+             class="sample-queries">
+
+            <button class="sample-chip">
+                Fatal collisions
+            </button>
+
+            <button class="sample-chip">
+                Pedestrian crashes in 2022
+            </button>
+
+            <button class="sample-chip">
+                Alcohol related crashes
+            </button>
+
+            <button class="sample-chip">
+                Top 10 dangerous roads
+            </button>
+
+            <button class="sample-chip">
+                Top 10 intersections
+            </button>
+
+            <button class="sample-chip">
+                Fatal crashes near schools
+            </button>
+
+            <button class="sample-chip">
+                Bicycle crashes by year
+            </button>
+
+        </div>
+
+    </section>
+
+    <!-- ==========================================
+         STATUS
+    ========================================== -->
+
+    <section id="statusContainer"
+             class="status-container hidden">
+
+        <div class="spinner"></div>
+
+        <div id="statusMessage">
+            Processing query...
+        </div>
+
+    </section>
+
+    <!-- ==========================================
+         ERROR
+    ========================================== -->
+
+    <section id="errorContainer"
+             class="error-container hidden">
+
+        <span id="errorMessage"></span>
+
+    </section>
+
+    <!-- ==========================================
+         AI INTERPRETATION
+    ========================================== -->
+
+    <section id="aiInterpretation"
+             class="card hidden">
+
+        <div class="card-header">
+
+            <h3>
+                AI Interpretation
+            </h3>
+
+        </div>
+
+        <div id="interpretationContent"
+             class="card-content">
+        </div>
+
+    </section>
+
+    <!-- ==========================================
+         STATISTICS
+    ========================================== -->
+
+    <section id="statsSection"
+             class="stats-grid hidden">
+
+        <div class="stat-card">
+
+            <div id="totalCount"
+                 class="stat-value">
+                0
+            </div>
+
+            <div class="stat-label">
+                Total Records
+            </div>
+
+        </div>
+
+        <div class="stat-card">
+
+            <div id="fatalCount"
+                 class="stat-value fatal">
+                0
+            </div>
+
+            <div class="stat-label">
+                Fatal
+            </div>
+
+        </div>
+
+        <div class="stat-card">
+
+            <div id="severeCount"
+                 class="stat-value severe">
+                0
+            </div>
+
+            <div class="stat-label">
+                Severe Injury
+            </div>
+
+        </div>
+
+        <div class="stat-card">
+
+            <div id="pedCount"
+                 class="stat-value pedestrian">
+                0
+            </div>
+
+            <div class="stat-label">
+                Pedestrian
+            </div>
+
+        </div>
+
+    </section>
+
+    <!-- ==========================================
+         ANALYTICS CHART
+    ========================================== -->
+
+    <section id="chartSection"
+             class="card hidden">
+
+        <div class="card-header">
+
+            <h3>
+                Analytics
+            </h3>
+
+        </div>
+
+        <div class="chart-wrapper">
+
+            <canvas id="analyticsChart"></canvas>
+
+        </div>
+
+    </section>
+
+    <!-- ==========================================
+         RESULTS TABLE
+    ========================================== -->
+
+    <section id="resultsSection"
+             class="card hidden">
+
+        <div class="card-header">
+
+            <div>
+
+                <h3>
+                    Results
+                </h3>
+
+                <small id="recordCounter">
+                    0 Records
+                </small>
+
+            </div>
+
+            <div>
+
+                <button id="exportCsvBtn"
+                        class="secondary-btn">
+                    Export CSV
+                </button>
+
+            </div>
+
+        </div>
+
+        <div class="table-wrapper">
+
+            <table id="resultsTable">
+
+                <thead>
+
+                <tr>
+
+                    <th>Date</th>
+                    <th>Severity</th>
+                    <th>Primary Road</th>
+                    <th>Secondary Road</th>
+                    <th>Collision Type</th>
+                    <th>Killed</th>
+                    <th>Injured</th>
+                    <th>Alcohol</th>
+                    <th>Lighting</th>
+
+                </tr>
+
+                </thead>
+
+                <tbody id="resultsBody">
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+    <!-- ==========================================
+         QUERY HISTORY
+    ========================================== -->
+
+    <section id="historySection"
+             class="card">
+
+        <div class="card-header">
+
+            <h3>
+                Query History
+            </h3>
+
+        </div>
+
+        <div id="historyList">
+
+            <div class="empty-history">
+                No queries yet
+            </div>
+
+        </div>
+
+    </section>
 
 </main>
 
-<footer>
-  Powered by <a href="https://www.anthropic.com" target="_blank">Claude AI</a> &amp;
-  <a href="https://www.esri.com" target="_blank">ArcGIS</a> ·
-  Pleasanton Collisions Dashboard
+<!-- ===================================================
+     FOOTER
+=================================================== -->
+
+<footer class="footer">
+
+    <span>
+        Pleasanton Collision Intelligence Dashboard
+    </span>
+
+    <span>
+        ArcGIS + Claude + GPT + Gemini
+    </span>
+
 </footer>
 
-<script>
-// ═══════════════════════════════════════════════════════
-//  CONFIG & SECURE STORAGE KEY CHECK
-// ═══════════════════════════════════════════════════════
-let CLAUDE_API_KEY = localStorage.getItem("anthropic_key");
+<!-- ===================================================
+     JAVASCRIPT
+=================================================== -->
 
-if (!CLAUDE_API_KEY) {
-  CLAUDE_API_KEY = prompt("Please enter a valid, active Anthropic API Key (sk-ant-...):");
-  if (CLAUDE_API_KEY) {
-    localStorage.setItem("anthropic_key", CLAUDE_API_KEY.trim());
-  }
-}
+<script src="js/providers.js"></script>
+<script src="js/validator.js"></script>
+<script src="js/arcgis.js"></script>
+<script src="js/analytics.js"></script>
+<script src="js/app.js"></script>
 
-const FEATURE_LAYER = "https://services7.arcgis.com/acUiOt0qxC8BlCCx/ArcGIS/rest/services/Pleasanton_Collisions_Dashboard_WFL1/FeatureServer/0";
-
-const SAMPLE_QUERIES = [
-  "Show all fatal collisions",
-  "Pedestrian collisions at night",
-  "Alcohol-involved crashes in 2022",
-  "Bicycle accidents with severe injury",
-  "Hit and run collisions",
-  "Collisions on Main Street",
-  "Crashes involving motorcycles",
-  "Collisions near schools",
-];
-
-const FIELD_SCHEMA = `
-Layer: Pleasanton Collisions (Point feature layer)
-Key fields and their values:
-
-COLLISION_SEVERITY (number): 1=Fatal, 2=Severe Injury, 3=Visible Injury, 4=Complaint of pain
-COLLISION_DATE (date): date of collision (use format 'YYYY-MM-DD')
-ACCIDENT_YEAR (number): year as number e.g. 2020, 2021, 2022, 2023
-PRIMARY_RD (string): primary road name e.g. 'MAIN ST', 'HOPYARD RD'
-SECONDARY_RD (string): cross street
-PEDESTRIAN_ACCIDENT (string): 'Y' or 'N'
-BICYCLE_ACCIDENT (string): 'Y' or 'N'
-MOTORCYCLE_ACCIDENT (string): 'Y' or 'N'
-TRUCK_ACCIDENT (string): 'Y' or 'N'
-ALCOHOL_INVOLVED (string): 'Y' or 'N'
-HIT_AND_RUN (string): 'Y' or 'N'
-NUMBER_KILLED (number): count of fatalities
-NUMBER_INJURED (number): count of injuries
-TYPE_OF_COLLISION (string): 'A'=Head-On, 'B'=Sideswipe, 'C'=Rear End, 'D'=Broadside, 'E'=Hit Object, 'F'=Overturned, 'G'=Vehicle/Pedestrian, 'H'=Other
-LIGHTING (string): 'A'=Daylight, 'B'=Dusk/Dawn, 'C'=Dark with Street Lights, 'D'=Dark no street lights, 'E'=Dark street lights not functioning
-ROAD_SURFACE (string): 'A'=Dry, 'B'=Wet, 'C'=Snowy or Icy, 'D'=Slippery
-WEATHER_1 (string): 'A'=Clear, 'B'=Cloudy, 'C'=Raining, 'D'=Snowing, 'E'=Fog, 'F'=Other, 'G'=Wind
-PRIMARY_COLL_FACTOR (string): 'A'=Vehicle Code Violation, 'B'=Other Improper Driving, 'C'=Other than Driver, 'D'=Unknown, 'E'=Fell asleep
-HIN_LRSP (string): 'Y' if on High Injury Network
-DAY_OF_WEEK (number): 1=Monday through 7=Sunday
-Hour (number): hour of day 0-23
-KSI (number): 1 if Killed or Severely Injured
-School_Name (string): name of nearby school if applicable
-Park_Name (string): name of nearby park if applicable
-EPDO_Score (number): Equivalent Property Damage Only score (higher = worse)
-`;
-
-const chipsEl = document.getElementById("chips");
-SAMPLE_QUERIES.forEach(q => {
-  const btn = document.createElement("button");
-  btn.className = "chip";
-  btn.textContent = q;
-  btn.onclick = () => {
-    document.getElementById("nlq-input").value = q;
-    runQuery();
-  };
-  chipsEl.appendChild(btn);
-});
-
-function showStatus(msg) {
-  const el = document.getElementById("status-bar");
-  document.getElementById("status-msg").textContent = msg;
-  el.style.display = "flex";
-}
-function hideStatus() { document.getElementById("status-bar").style.display = "none"; }
-function showError(msg) {
-  const el = document.getElementById("error-bar");
-  el.textContent = "⚠ " + msg;
-  el.style.display = "block";
-}
-function hideError() { document.getElementById("error-bar").style.display = "none"; }
-
-function showSQL(clause) {
-  document.getElementById("sql-text").textContent = "WHERE " + clause;
-  document.getElementById("sql-wrap").style.display = "block";
-}
-
-const SEV_LABELS = { "1":"Fatal","2":"Severe Injury","3":"Visible Injury","4":"Complaint of pain" };
-const SEV_CLASS  = { "1":"sev-1","2":"sev-2","3":"sev-3","4":"sev-4" };
-const TYPE_LABELS = { A:"Head-On",B:"Sideswipe",C:"Rear End",D:"Broadside",E:"Hit Object",F:"Overturned",G:"Veh/Ped",H:"Other" };
-const LIGHT_LABELS = { A:"Daylight",B:"Dusk/Dawn",C:"Dark (lit)",D:"Dark (unlit)",E:"Dark (broken)" };
-
-// ── Main function ──────────────────────────────────────
-async function runQuery() {
-  const question = document.getElementById("nlq-input").value.trim();
-  if (!question) return;
-
-  if (!CLAUDE_API_KEY) {
-     showError("Missing API key parameter. Please refresh and enter your Anthropic API key.");
-     return;
-  }
-
-  hideError();
-  document.getElementById("sql-wrap").style.display = "none";
-  document.getElementById("results-wrap").style.display = "none";
-  document.getElementById("stats-row").style.display = "none";
-  document.getElementById("run-btn").disabled = true;
-
-  try {
-    showStatus("Translating your question to SQL…");
-
-    const url = "https://api.anthropic.com/v1/messages";
-    
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": CLAUDE_API_KEY,
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true"
-      },
-      body: JSON.stringify({
-        model: "claude-3-5-sonnet-latest",
-        max_tokens: 300,
-        system: `You are a GIS SQL expert for an ArcGIS Feature Layer.
-Given the layer schema below, convert the user's natural language question into a valid ArcGIS SQL WHERE clause.
-
-Rules:
-- Return ONLY the WHERE clause (no SELECT, no WHERE keyword itself, no backticks, no markdown).
-- If no filter is needed, return: 1=1
-- Use correct field names and values exactly as specified in the schema.
-- For text comparisons use UPPER() for case-insensitive matching when the value could be mixed case e.g. UPPER(PRIMARY_RD) LIKE UPPER('%main%')
-- For year filters use: ACCIDENT_YEAR = 2022  (not date functions)
-- For date ranges use: COLLISION_DATE >= DATE '2022-01-01' AND COLLISION_DATE <= DATE '2022-12-31'
-- Combine multiple conditions with AND / OR as appropriate.
-- Never invent field names not in the schema.
-
-${FIELD_SCHEMA}`,
-        messages: [{ role: "user", content: question }]
-      })
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`Anthropic API returned status ${response.status}: ${errText}`);
-    }
-
-    const claudeData = await response.json();
-    const whereClause = claudeData.content[0].text.trim().replace(/^WHERE\s+/i, "").replace(/;$/, "");
-    showSQL(whereClause);
-
-    // Step 2 — Query ArcGIS Feature Layer
-    showStatus("Fetching collision data from ArcGIS…");
-
-    const params = new URLSearchParams({
-      where: whereClause,
-      outFields: "COLLISION_DATE,COLLISION_SEVERITY,PRIMARY_RD,SECONDARY_RD,TYPE_OF_COLLISION,NUMBER_KILLED,NUMBER_INJURED,ALCOHOL_INVOLVED,LIGHTING,PEDESTRIAN_ACCIDENT,BICYCLE_ACCIDENT,ACCIDENT_YEAR",
-      resultRecordCount: 200,
-      orderByFields: "COLLISION_DATE DESC",
-      f: "json"
-    });
-
-    const arcRes = await fetch(`${FEATURE_LAYER}/query?${params}`);
-    if (!arcRes.ok) throw new Error("ArcGIS query failed: " + arcRes.status);
-
-    const arcData = await arcRes.json();
-    if (arcData.error) throw new Error("ArcGIS error: " + arcData.error.message);
-
-    const features = arcData.features || [];
-
-    hideStatus();
-    renderStats(features);
-    renderTable(features);
-
-  } catch (err) {
-    hideStatus();
-    showError(err.message);
-    console.error(err);
-  } finally {
-    document.getElementById("run-btn").disabled = false;
-  }
-}
-
-function renderStats(features) {
-  const total   = features.length;
-  const fatal   = features.filter(f => f.attributes.COLLISION_SEVERITY == 1).length;
-  const severe  = features.filter(f => f.attributes.COLLISION_SEVERITY == 2).length;
-  const ped     = features.filter(f => f.attributes.PEDESTRIAN_ACCIDENT === "Y").length;
-
-  document.getElementById("st-total").textContent  = total;
-  document.getElementById("st-fatal").textContent  = fatal;
-  document.getElementById("st-severe").textContent = severe;
-  document.getElementById("st-ped").textContent    = ped;
-  document.getElementById("stats-row").style.display = "grid";
-}
-
-function renderTable(features) {
-  const tbody = document.getElementById("result-tbody");
-  tbody.innerHTML = "";
-
-  if (features.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px;">No records found for this query.</td></tr>`;
-  } else {
-    features.forEach(f => {
-      const a = f.attributes;
-      const date = a.COLLISION_DATE
-        ? new Date(a.COLLISION_DATE).toLocaleDateString("en-US", {year:"numeric",month:"short",day:"numeric"})
-        : "—";
-      const sev  = String(a.COLLISION_SEVERITY || "");
-      const loc  = [a.PRIMARY_RD, a.SECONDARY_RD].filter(Boolean).join(" & ") || "—";
-      const type = TYPE_LABELS[a.TYPE_OF_COLLISION] || a.TYPE_OF_COLLISION || "—";
-      const lit  = LIGHT_LABELS[a.LIGHTING] || a.LIGHTING || "—";
-      const alc  = a.ALCOHOL_INVOLVED === "Y" ? "Yes" : "No";
-
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${date}</td>
-        <td><span class="sev ${SEV_CLASS[sev]||''}">${SEV_LABELS[sev]||sev||"—"}</span></td>
-        <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis">${loc}</td>
-        <td>${type}</td>
-        <td style="text-align:center">${a.NUMBER_KILLED ?? "—"}</td>
-        <td style="text-align:center">${a.NUMBER_INJURED ?? "—"}</td>
-        <td style="color:${alc==="Yes"?"var(--fatal)":"var(--muted)"}">${alc}</td>
-        <td>${lit}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-  }
-
-  document.getElementById("result-count").textContent =
-    features.length + (features.length === 200 ? "+ records (max shown)" : " records");
-  document.getElementById("results-wrap").style.display = "block";
-}
-
-document.getElementById("nlq-input").addEventListener("keydown", e => {
-  if (e.key === "Enter") runQuery();
-});
-</script>
 </body>
 </html>
