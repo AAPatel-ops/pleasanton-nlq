@@ -270,7 +270,6 @@
 
 <main>
 
-  <!-- ── Query Input ── -->
   <div class="query-wrap">
     <div class="query-label">Ask a question</div>
     <div class="input-row">
@@ -281,20 +280,17 @@
     <div class="chips" id="chips"></div>
   </div>
 
-  <!-- ── SQL Preview ── -->
   <div class="sql-wrap" id="sql-wrap">
     <div class="sql-label">Generated SQL filter</div>
     <div class="sql-text" id="sql-text"></div>
   </div>
 
-  <!-- ── Loading / Error ── -->
   <div class="status-bar" id="status-bar">
     <div class="spinner"></div>
     <span id="status-msg">Thinking…</span>
   </div>
   <div class="error-bar" id="error-bar"></div>
 
-  <!-- ── Stats Cards ── -->
   <div class="stats-row" id="stats-row" style="display:none">
     <div class="stat-card">
       <div class="stat-val c-accent" id="st-total">—</div>
@@ -314,7 +310,6 @@
     </div>
   </div>
 
-  <!-- ── Results Table ── -->
   <div class="results-wrap" id="results-wrap">
     <div class="results-header">
       <span>Results</span>
@@ -349,9 +344,9 @@
 
 <script>
 // ═══════════════════════════════════════════════════════
-//  CONFIG — replace YOUR_CLAUDE_API_KEY before deploying
+//  CONFIG — your operational key configuration
 // ═══════════════════════════════════════════════════════
-const CLAUDE_API_KEY  = "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";   // ← paste your key here
+const CLAUDE_API_KEY  = "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";
 const FEATURE_LAYER   = "https://services7.arcgis.com/acUiOt0qxC8BlCCx/ArcGIS/rest/services/Pleasanton_Collisions_Dashboard_WFL1/FeatureServer/0";
 
 // ── Sample queries shown as chips ──────────────────────
@@ -440,12 +435,6 @@ async function runQuery() {
   const question = document.getElementById("nlq-input").value.trim();
   if (!question) return;
 
-  // Check API key
-  if (CLAUDE_API_KEY === "YOUR_CLAUDE_API_KEY") {
-    showError("Please open nlq.html in a text editor and replace YOUR_CLAUDE_API_KEY with your real Anthropic API key. See the setup guide for instructions.");
-    return;
-  }
-
   // Reset UI
   hideError();
   document.getElementById("sql-wrap").style.display = "none";
@@ -454,10 +443,13 @@ async function runQuery() {
   document.getElementById("run-btn").disabled = true;
 
   try {
-    // Step 1 — ask Claude to generate a WHERE clause
+    // Step 1 — ask Claude to generate a WHERE clause via a CORS Proxy
     showStatus("Translating your question to SQL…");
 
-    const claudeRes = await fetch("https://api.anthropic.com/v1/messages", {
+    const proxyUrl = "https://corsproxy.io/?";
+    const targetUrl = "https://api.anthropic.com/v1/messages";
+
+    const claudeRes = await fetch(proxyUrl + encodeURIComponent(targetUrl), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
