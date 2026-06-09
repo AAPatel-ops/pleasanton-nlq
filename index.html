@@ -24,7 +24,7 @@
     --complaint: #38a169;
     --radius:    10px;
     --radius-sm: 6px;
-    /* Clean fallback font stack prevents network slow intervention warnings */
+    /* Clean fallback font stack handles network slow interventions gracefully */
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
 
@@ -345,12 +345,12 @@
 
 <script>
 // ═══════════════════════════════════════════════════════
-//  CONFIG & LOCALSECURE STORAGE CHECK
+//  CONFIG & SECURE LOCAL STORAGE STORAGE KEY CHECK
 // ═══════════════════════════════════════════════════════
 let CLAUDE_API_KEY = localStorage.getItem("anthropic_key");
 
 if (!CLAUDE_API_KEY) {
-  CLAUDE_API_KEY = prompt("Please enter a valid Anthropic API Key (sk-ant-...):");
+  CLAUDE_API_KEY = prompt("Please enter a valid, active Anthropic API Key (sk-ant-...):");
   if (CLAUDE_API_KEY) {
     localStorage.setItem("anthropic_key", CLAUDE_API_KEY.trim());
   }
@@ -445,7 +445,7 @@ async function runQuery() {
   if (!question) return;
 
   if (!CLAUDE_API_KEY) {
-     showError("Missing API key parameter. Reload the frame and enter a fresh Anthropic API key.");
+     showError("Missing API key parameter. Please refresh and enter your Anthropic API key.");
      return;
   }
 
@@ -459,12 +459,11 @@ async function runQuery() {
   try {
     showStatus("Translating your question to SQL…");
 
-    // AllOrigins CSP-safe structural proxy bypass wrapper
+    // 1. Target URL for Anthropic
     const targetUrl = "https://api.anthropic.com/v1/messages";
-    const proxyUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent(targetUrl);
-
-    // Build standard body payload to pass inside proxy request configuration
-    const reqBody = {
+    
+    // 2. Build the exact payload Claude expects
+    const claudePayload = {
       model: "claude-3-5-sonnet-20241022",
       max_tokens: 300,
       system: `You are a GIS SQL expert for an ArcGIS Feature Layer.
@@ -484,8 +483,8 @@ ${FIELD_SCHEMA}`,
       messages: [{ role: "user", content: question }]
     };
 
-    // Use standard HTTP POST request structure targeted cleanly via proxy mapping pipeline
-    const proxyRes = await fetch(proxyUrl, {
+    // 3. Wrap request payload parameters dynamically using AllOrigins POST structures
+    const response = await fetch("https://api.allorigins.win/get?url=" + encodeURIComponent(targetUrl), {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -498,19 +497,19 @@ ${FIELD_SCHEMA}`,
           "anthropic-version": "2023-06-01",
           "anthropic-dangerous-direct-browser-access": "true"
         },
-        body: JSON.stringify(reqBody)
+        body: JSON.stringify(claudePayload)
       })
     });
 
-    if (!proxyRes.ok) throw new Error("Network proxy handshake failed.");
+    if (!response.ok) throw new Error("Proxy connection failed with status: " + response.status);
 
-    const rawWrapperData = await proxyRes.json();
+    const wrapperData = await response.json();
     
-    // Parse inner string representation safely to sidestep ArcGIS unsafe-eval policies
-    const claudeData = JSON.parse(rawWrapperData.contents);
+    // AllOrigins parses the remote result back as an object encoded string variable inside .contents
+    const claudeData = JSON.parse(wrapperData.contents);
 
     if (claudeData.error) {
-      throw new Error(claudeData.error.message || "Anthropic API rejection error.");
+      throw new Error(claudeData.error.message || "Anthropic API Error");
     }
 
     const whereClause = claudeData.content[0].text.trim().replace(/^WHERE\s+/i, "").replace(/;$/, "");
@@ -535,7 +534,7 @@ ${FIELD_SCHEMA}`,
 
     const features = arcData.features || [];
 
-    // Step 3 — render dashboard outputs
+    // Step 3 — render stats + table metrics layout details
     hideStatus();
     renderStats(features);
     renderTable(features);
@@ -600,7 +599,7 @@ function renderTable(features) {
   document.getElementById("results-wrap").style.display = "block";
 }
 
-// Enter key monitoring support
+// ── Enter key layout listener ─────────────────────────
 document.getElementById("nlq-input").addEventListener("keydown", e => {
   if (e.key === "Enter") runQuery();
 });
